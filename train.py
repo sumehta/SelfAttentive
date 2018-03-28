@@ -27,7 +27,7 @@ parser.add_argument('--emsize', type=int, default=200, help='size of word embedd
 parser.add_argument('--nhid', type=int, default=300, help='number of hidden units per layer')
 parser.add_argument('--nlayers', type=int, default=1, help='number of layers')
 parser.add_argument('--r', type=int, default=30, help='r in paper, # of keywords you want to focus on')
-parser.add_argument('--mlp_nhid', type=int, default=3000, help='r in paper, # of keywords you want to focus on')
+parser.add_argument('--mlp_nhid', type=int, default=3000, help='')
 parser.add_argument('--da', type=int, default=350, help='da in paper' )
 parser.add_argument('--lamb', type=float, default=1, help='penalization term coefficient')
 parser.add_argument('--lr', type=float, default=0.001, help='initial learning rate')

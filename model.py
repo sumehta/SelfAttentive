@@ -4,10 +4,25 @@ import torch.nn as nn
 import torch
 from torch.autograd import Variable
 
+
 class SelfAttentive( nn.Module ):
 
     def __init__( self, ntoken, ninp, nhid, nlayers, da, r, mlp_nhid, nclass, emb_matrix, cuda ):
         super( SelfAttentive , self).__init__()
+        """
+        Args:
+            ntoken:
+            ninp:
+            nhid:
+            nlayers:
+            da:
+            r:
+            mlp_nhid:
+            nclass:
+            emb_matrix:
+            cuda:
+        """
+
 
         # Embedding Layer
         self.encoder = nn.Embedding( ntoken, ninp )
@@ -67,6 +82,10 @@ class SelfAttentive( nn.Module ):
 
 
         # Attention Block
+        # for i in range(sentences):  # sentences can be detected by an <s> token in the tokens list
+                                    # compute sentence embedding for each sentence individually in this loop
+                                    # combine them to get a document embedding
+
         for i in range( input.size( 0 ) ):
 
             H = depacked_output[ i , :lens[ i ], : ]

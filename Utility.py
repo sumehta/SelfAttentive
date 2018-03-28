@@ -24,6 +24,7 @@ def repackage_hidden( h ):
     else:
         return tuple( repackage_hidden( v ) for v in h )
 
+
 # Retrieve a batch from the source
 def get_batch( source, labels, len_list, i, size, cuda, evaluation=False ):
     

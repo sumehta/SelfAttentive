@@ -38,7 +38,8 @@ class Corpus( object ):
             count = 0
             for record in Reader:
                 count += 1
-                review = record[ 0 ].decode( 'utf-8' )
+                # review = record[ 0 ].decode( 'utf-8' )
+                review = record[ 0 ]
                 # words = [ word for sent in sent_tokenize( review ) for word in word_tokenize( sent ) ]
                 words = review.split()
                 if len( words ) > max_len:
@@ -55,7 +56,7 @@ class Corpus( object ):
 
             for idx, record in enumerate( Reader ):
                 labels[ idx ] = int( record[ 1 ] )
-                review = record[ 0 ].decode( 'utf-8' )
+                review = record[ 0 ]
                 # words = [ word for sent in sent_tokenize( review ) for word in word_tokenize( sent ) ]
                 words = review.split()
                 lengths.append( len( words ) )
