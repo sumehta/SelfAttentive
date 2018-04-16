@@ -62,11 +62,23 @@ class SelfAttentive( nn.Module ):
         self.S1.weight.data.uniform_( -initrange, initrange )
         self.S2.weight.data.uniform_( -initrange, initrange )
 
-        self.MLP.weight.data.uniform_( -initrange, initrange )
-        self.MLP.bias.data.fill_( 0 )
+        self.MLP_et.weight.data.uniform_( -initrange, initrange )
+        self.MLP_et.bias.data.fill_( 0 )
 
-        self.decoder.weight.data.uniform_( -initrange, initrange )
-        self.decoder.bias.data.fill_( 0 )
+        self.MLP_prt.weight.data.uniform_( -initrange, initrange )
+        self.MLP_prt.bias.data.fill_( 0 )
+
+        self.MLP_popt.weight.data.uniform_( -initrange, initrange )
+        self.MLP_popt.bias.data.fill_( 0 )
+
+        self.decoder_et.weight.data.uniform_( -initrange, initrange )
+        self.decoder_et.bias.data.fill_( 0 )
+
+        self.decoder_prt.weight.data.uniform_( -initrange, initrange )
+        self.decoder_prt.bias.data.fill_( 0 )
+
+        self.decoder_popt.weight.data.uniform_( -initrange, initrange )
+        self.decoder_popt.bias.data.fill_( 0 )
 
     def init_wordembedding( self, embedding_matrix ):
         self.encoder.weight.data = embedding_matrix
@@ -104,7 +116,7 @@ class SelfAttentive( nn.Module ):
             # Attention Weights and Embedding
             A = functional.softmax( s2.t() )
             M = torch.mm( A, H )
-            BM[ i, : ] = M.view( -1 )
+            BM[ i, : ] = M.view( -1 )    # embedding for one article
 
             # Penalization term
             AAT = torch.mm( A, A.t() )
@@ -119,13 +131,13 @@ class SelfAttentive( nn.Module ):
         MLPhidden_et = self.MLP_et( BM )    #event type
         decoded_et = self.decoder_et( functional.relu( MLPhidden_et ) )
 
-        MLPhidden_prt = self.MLP_prt(BM)
+        MLPhidden_prt = self.MLP_prt(BM)  #protest_type
         decoded_prt = self.decoder_prt(functional.relu( MLPhidden_prt ))
 
-        MLPhidden_popt = self.MLP_prt(BM)
-        decoded_popt = self.decoder_prt(functional.relu( MLPhidden_popt ))
+        MLPhidden_popt = self.MLP_popt(BM)  #population_type
+        decoded_popt = self.decoder_popt(functional.relu( MLPhidden_popt ))
 
-        return decoded_et, MLPhidden_prt, MLPhidden_popt, hidden, penal, weights
+        return decoded_et, decoded_prt, decoded_popt, hidden, penal, weights
 
     def init_hidden( self, bsz ):
         weight = next( self.parameters() ).data
