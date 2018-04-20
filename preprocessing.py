@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from data import *
 from collections import Counter
+from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem import WordNetLemmatizer
 
@@ -39,7 +40,10 @@ PROTEST_CLASSES = {u'Employment and Wages': 0,
  u'Other Government Policies': 5,
  u'Non-Protest': 6}
 
-
+# NEW_PROTEST_CLASSES = {u'Other': 0, #3
+#                u'Other Government Policies': 1, #5
+#                u'Non-Protest': 2 #6
+# }
 def get_data(DATA_JSON):
     data = []
     key_words = []
@@ -47,6 +51,23 @@ def get_data(DATA_JSON):
         for line in f:
             data.append(json.loads(line))
     return data
+
+
+def balance_data(articles):
+    balanced_data = []
+    positive_cnt = 0
+    for article in articles:
+        if __get_attribute_label(article, 'eType', EVENT_CLASSES) == '1':
+            balanced_data.append(article)
+            positive_cnt += 1
+
+    for article in articles:
+        while positive_cnt > 0:
+            if __get_attribute_label(article, 'eType', EVENT_CLASSES) == '0':
+                balanced_data.append(article)
+                positive_cnt -= 1
+
+    return balanced_data
 
 
 def __get_attribute_label(article, attribute, attribute_mapping):
@@ -65,13 +86,14 @@ def tokenize(articles):
     #Tokenization and Stemming
     # Remove punctuation and tokenize
     # NO punctuation in text
+    stop_words = set(stopwords.words('english'))
     wordnet_lemmatizer = WordNetLemmatizer()
     punctuations = list(string.punctuation )
     Data = []
+    cnt = 0
     for a, article in enumerate(articles):
         print(a)
         article_text = article['text']
-
         event_type = __get_attribute_label(article, 'eType', EVENT_CLASSES)
 
         if event_type == '1':
@@ -86,9 +108,16 @@ def tokenize(articles):
         article_text = article_text.replace('<br/>', ' ')
         # deal with punctuations
         for ch in punctuations:
-            article_text = article_text.replace( ch, ch + ' ' )
+            article_text = article_text.replace( ch, ' ' )
 
-        tokens = [word for word in word_tokenize( article_text ) ]
+        tokens = [word for word in word_tokenize( article_text ) if not word in stop_words]
+        # TODO: Uncomment for truncating
+        #if len(tokens) > 500:
+        #    tokens = tokens[:500]
+        #    cnt += 1
+        # else:
+        #     tokens = tokens + ['<PAD>']*(500-len(tokens))
+
         tagged_tokens = nltk.pos_tag( tokens )
 
         stemmed = []
@@ -106,7 +135,8 @@ def tokenize(articles):
         record = [' '.join(stemmed), event_type, protest_type, population_type, str(length)]
 
         Data.append(record)
-
+    print('Number truncated')
+    print(cnt)
     return Data
 
 
@@ -143,7 +173,7 @@ def data_splits(Data, train_path, valid_path, test_path):
 
             records = [[record[0], record[1], record[2], record[3], str(record[4])] for record in records]
             for record in records:
-                record = [ item.encode('utf-8') for item in record ]
+                record = [item for item in record ]
                 Writer.writerow(record)
 
 
@@ -185,7 +215,7 @@ def word_embeddings(data_path, embedding_file, emb_size=200):
         word_idx_list = torch.cuda.LongTensor( word_idx_list )
     else:
         word_idx_list = torch.LongTensor( word_idx_list )
-        
+
     torch.save( emb_matrix, 'data/emb_matrix.pt' )
     torch.save( word_idx_list, 'data/word_idx_list.pt' )
 
@@ -201,11 +231,12 @@ if __name__=="__main__":
         articles = get_data(args.data_path)
     else:
         articles = get_data(ENGLISH_DATA_SMART) + get_data(ENGLISH_DATA_BASE)
-    # articles = get_data(ENGLISH_DATA_SMART)
+    # print('Balance data....')
+    # articles = balance_data(articles)
     print('Start processing data........')
     data = tokenize(articles)
     print('Finished processing data, writing data to files.........')
     data_splits(data, args.train_path, args.valid_path, args.test_path)
-    # print('Create word embedding file......')
-    # word_embeddings('/Users/sneha/Documents/dev/SelfAttentive/data/', '/Users/sneha/Documents/dev/SelfAttentive/glove_vectors/glove.twitter.27B.200d.txt', 200)
+    print('Create word embedding file......')
+    word_embeddings('/Users/sneha/Documents/dev/SelfAttentive/data/', '/Users/sneha/Documents/dev/SelfAttentive/glove_vectors/glove.twitter.27B.200d.txt', 200)
     print('Done.')
